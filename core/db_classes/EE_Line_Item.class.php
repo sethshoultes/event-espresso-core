@@ -1013,7 +1013,8 @@ class EE_Line_Item extends EE_Base_Class implements EEI_Line_Item {
 
 	/**
 	 * Recalculates the total on each individual tax (based on a recalculation of the pre-tax total), sets
-	 * the totals on each tax calculated, and returns the final tax total
+	 * the totals on each tax calculated, and returns the final tax total. Re-saves tax line items
+     * and tax sub-total if already in the DB
 	 * @return float
 	 */
 	public function recalculate_taxes_and_tax_total() {
@@ -1026,6 +1027,7 @@ class EE_Line_Item extends EE_Base_Class implements EEI_Line_Item {
 			$total_on_this_tax = $taxable_total * $tax->percent() / 100;
 			//remember the total on this line item
 			$tax->set_total( $total_on_this_tax );
+			$tax->maybe_save();
 			$tax_total += $tax->total();
 		}
 		$this->_recalculate_tax_sub_total();
@@ -1035,7 +1037,8 @@ class EE_Line_Item extends EE_Base_Class implements EEI_Line_Item {
 
 
 	/**
-	 * Simply forces all the tax-sub-totals to recalculate. Assumes the taxes have been calculated
+	 * Simply forces all the tax-sub-totals to recalculate. Assumes the taxes have been calculated.
+     * Re-saves the tax sub-total if it's already in the DB.
 	 * @return void
 	 */
 	private function _recalculate_tax_sub_total() {
@@ -1051,6 +1054,7 @@ class EE_Line_Item extends EE_Base_Class implements EEI_Line_Item {
 			}
 			$this->set_total( $total );
 			$this->set_percent( $total_percent );
+            $this->maybe_save();
 		} elseif ( $this->is_total() ) {
 			foreach ( $this->children() as $maybe_tax_subtotal ) {
 				if ( $maybe_tax_subtotal instanceof EE_Line_Item ) {
